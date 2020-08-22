@@ -17,11 +17,17 @@ ENV RUBY_VERSION %%FULL_VERSION%%
 ENV RUBY_DOWNLOAD_SHA256 %%SHA256%%
 ENV RUBYGEMS_VERSION %%RUBYGEMS%%
 
+COPY bin/jemalloc-5.2.1.tar.xz /tmp
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 RUN set -eux; \
 	\
+	tar -xJf /tmp/jemalloc-5.2.1.tar.xz -C /tmp; \
+	cd /tmp/pack && ./install.sh; \
+	cd; \
+	rm /tmp/jemalloc-5.2.1.tar.xz; \
+	rm -rf /tmp/pack; \
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
 		bison \
@@ -50,7 +56,6 @@ RUN set -eux; \
 		xz \
 		yaml-dev \
 		zlib-dev \
-#		jemalloc-dev \
 	; \
 	\
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
@@ -87,7 +92,6 @@ RUN set -eux; \
 		--build="$gnuArch" \
 		--disable-install-doc \
 		--enable-shared \
-#		--with-jemalloc \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
@@ -125,8 +129,10 @@ RUN set -eux; \
 	gem --version; \
 	bundle --version
 
+ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
+
 # Sanity check for jemalloc
-# RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"
+RUN ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
 
 # don't create ".bundle" in all our apps
 ENV GEM_HOME /usr/local/bundle

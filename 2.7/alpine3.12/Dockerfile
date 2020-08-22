@@ -16,7 +16,7 @@ ENV RUBY_MAJOR 2.7
 ENV RUBY_VERSION 2.7.1
 ENV RUBY_DOWNLOAD_SHA256 b224f9844646cc92765df8288a46838511c1cec5b550d8874bd4686a904fcee7
 
-COPY jemalloc-5.2.1.tar.xz /tmp
+COPY bin/jemalloc-5.2.1.tar.xz /tmp
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
@@ -126,6 +126,7 @@ RUN set -eux; \
 	bundle --version
 
 ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
+
 # Sanity check for jemalloc
 RUN ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
 
