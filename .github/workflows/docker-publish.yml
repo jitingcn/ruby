@@ -19,7 +19,7 @@ jobs:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
           repository: jiting/ruby
-          path: /2.7/buster/slim
+          path: 2.7/buster/slim
           tags: 2.7.1-slim-buster,2.7-slim-buster,2.7-slim,2.7.1,2.7,slim,latest
   
   alpine:
