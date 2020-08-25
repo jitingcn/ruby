@@ -1,3 +1,34 @@
+FROM alpine:%%PLACEHOLDER%% as jemalloc-builder
+
+ENV pkgname jemalloc
+ENV	pkgver 5.2.1
+ENV sha512 0bbb77564d767cef0c6fe1b97b705d368ddb360d55596945aea8c3ba5889fbce10479d85ad492c91d987caacdbbdccc706aa3688e321460069f00c05814fae02
+
+RUN apk add --no-cache \
+		autoconf \
+		gcc \
+		libc-dev \
+		make \
+		patch \
+		tar \
+		xz \
+		bzip2 \
+	; \
+	wget -O jemalloc.tar.bz2 "https://github.com/$pkgname/$pkgname/releases/download/$pkgver/$pkgname-$pkgver.tar.bz2"; \
+	echo "$sha512 *jemalloc.tar.bz2" | sha512sum -c; \
+	mkdir /builder /pkg; \
+	tar -xjf jemalloc.tar.bz2 -C /builder --strip-components=1; \
+	rm jemalloc.tar.bz2; \
+	cd /builder; \
+	./configure --build=$CBUILD --host=$CHOST --prefix=/usr --sysconfdir=/etc --localstatedir=/var --disable-syscall; \
+	make -j "$(nproc)"; \
+	make DESTDIR="/tmp/pkg" install_include; \
+	make DESTDIR="/tmp/pkg" install_lib; \
+	cp /builder/jemalloc.pc /tmp/pkg; \
+	cd /tmp; \
+	tar -cJhf jemalloc.tar.xz pkg/; \
+	rm -rf /builder
+
 FROM alpine:%%PLACEHOLDER%%
 
 RUN apk add --no-cache \
@@ -17,17 +48,28 @@ ENV RUBY_VERSION %%FULL_VERSION%%
 ENV RUBY_DOWNLOAD_SHA256 %%SHA256%%
 ENV RUBYGEMS_VERSION %%RUBYGEMS%%
 
-COPY bin/jemalloc-5.2.1.tar.xz /tmp
+COPY --from=jemalloc-builder /tmp/jemalloc.tar.xz /tmp
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 RUN set -eux; \
 	\
-	tar -xJf /tmp/jemalloc-5.2.1.tar.xz -C /tmp; \
-	cd /tmp/pack && ./install.sh; \
-	cd; \
-	rm /tmp/jemalloc-5.2.1.tar.xz; \
-	rm -rf /tmp/pack; \
+	tar -xJf /tmp/jemalloc.tar.xz -C /tmp; \
+	rm /tmp/jemalloc.tar.xz; \
+	\
+	/usr/bin/install -c -d /usr/include/jemalloc; \
+	/usr/bin/install -c -m 644 /tmp/pkg/usr/include/jemalloc/jemalloc.h /usr/include/jemalloc; \
+	/usr/bin/install -c -d /usr/lib; \
+	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc.so.2 /usr/lib; \
+	ln -sf libjemalloc.so.2 /usr/lib/libjemalloc.so; \
+	/usr/bin/install -c -d /usr/lib; \
+	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc.a /usr/lib; \
+	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc_pic.a /usr/lib; \
+	/usr/bin/install -c -d /usr/lib/pkgconfig; \
+	/usr/bin/install -c -m 644 /tmp/pkg/jemalloc.pc /usr/lib/pkgconfig; \
+	\
+	rm -rf /tmp/pkg; \
+	\
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
 		bison \
@@ -92,6 +134,7 @@ RUN set -eux; \
 		--build="$gnuArch" \
 		--disable-install-doc \
 		--enable-shared \
+		--with-jemalloc \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
@@ -101,6 +144,7 @@ RUN set -eux; \
 			| tr ',' '\n' \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
+			| sed s/"so:libjemalloc.so.2"// \
 	)"; \
 	apk add --no-network --virtual .ruby-rundeps \
 		$runDeps \
@@ -115,9 +159,8 @@ RUN set -eux; \
 	\
 	cd /; \
 	rm -r /usr/src/ruby; \
-# make sure bundled "rubygems" is older than RUBYGEMS_VERSION (https://github.com/docker-library/ruby/issues/246)
-	ruby -e 'exit(Gem::Version.create(ENV["RUBYGEMS_VERSION"]) > Gem::Version.create(Gem::VERSION))'; \
-	gem update --system "$RUBYGEMS_VERSION" && rm -r /root/.gem/; \
+	rm /usr/lib/libjemalloc.a; \
+	rm /usr/lib/libjemalloc_pic.a; \
 # verify we have no "ruby" packages installed
 	! apk --no-network list --installed \
 		| grep -v '^[.]ruby-rundeps' \
@@ -129,9 +172,8 @@ RUN set -eux; \
 	gem --version; \
 	bundle --version
 
-ENV LD_PRELOAD=/usr/lib/libjemalloc.so.2
-
 # Sanity check for jemalloc
+RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"
 RUN ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
 
 # don't create ".bundle" in all our apps
