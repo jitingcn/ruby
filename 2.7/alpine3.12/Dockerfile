@@ -55,11 +55,11 @@ RUN set -eux; \
 	; \
 	wget -O jemalloc.tar.bz2 "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2"; \
 	echo "$jemalloc_sha512 *jemalloc.tar.bz2" | sha512sum -c; \
-	mkdir /builder /pkg; \
+	mkdir /builder; \
 	tar -xjf jemalloc.tar.bz2 -C /builder --strip-components=1; \
 	rm jemalloc.tar.bz2; \
 	cd /builder; \
-	./configure --build=$CBUILD --host=$CHOST --prefix=/usr --sysconfdir=/etc --localstatedir=/var --disable-syscall; \
+	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --disable-syscall; \
 	make -j "$(nproc)"; \
 	make DESTDIR="/tmp/pkg" install_include; \
 	make DESTDIR="/tmp/pkg" install_lib; \
