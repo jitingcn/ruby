@@ -2,11 +2,22 @@ name: Build images
 
 on:
   push:
+  pull_request:
   schedule:
     - cron: 0 0 * * 1
   workflow_dispatch:
 
 jobs:
+  test:
+    runs-on: ubuntu-latest
+    if: github.event == 'pull_request'
+    steps:
+      - uses: actions/checkout@v2
+        
+      - name: Build test image
+        working-directory: ./2.7/alpine3.12
+        run: docker build .
+        
   slim:
     runs-on: ubuntu-latest
 
@@ -14,6 +25,7 @@ jobs:
       - uses: actions/checkout@v2
           
       - name: Build and push slim image
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v1
         with:
           username: jiting
@@ -24,11 +36,12 @@ jobs:
   
   alpine:
     runs-on: ubuntu-latest
-
+    
     steps:
       - uses: actions/checkout@v2
 
       - name: Build and push alpine image
+        if: github.ref == 'refs/heads/master'
         uses: docker/build-push-action@v1
         with:
           username: jiting
