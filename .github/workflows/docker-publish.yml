@@ -34,7 +34,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: 2.7/buster/slim
-          file: ./Dockerfile
+          file: 2.7/buster/slim/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
@@ -42,6 +42,16 @@ jobs:
             jiting/ruby:2.7-slim-buster
             jiting/ruby:2.7-slim
             jiting/ruby:slim
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+
   buster:
     runs-on: ubuntu-latest
 
@@ -68,7 +78,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: 2.7/buster
-          file: ./Dockerfile
+          file: 2.7/buster/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
@@ -77,6 +87,15 @@ jobs:
             jiting/ruby:2.7.1
             jiting/ruby:2.7
             jiting/ruby:buster
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
   alpine:
     runs-on: ubuntu-latest
@@ -104,7 +123,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: 2.7/alpine3.12
-          file: ./Dockerfile
+          file: 2.7/alpine3.12/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
@@ -112,6 +131,15 @@ jobs:
             jiting/ruby:2.7-alpine
             jiting/ruby:alpine
             jiting/ruby:latest
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
   slim-3_0_preview:
     runs-on: ubuntu-latest
@@ -139,13 +167,22 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: 3.0/buster/slim
-          file: ./Dockerfile
+          file: 3.0/buster/slim/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:3.0.0-preview1-slim-buster
             jiting/ruby:3.0.0-preview1-slim
-  
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
+
   alpine-3_0_preview:
     runs-on: ubuntu-latest
 
@@ -172,8 +209,17 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: 3.0/alpine3.12
-          file: ./Dockerfile
+          file: 3.0/alpine3.12/Dockerfile
           platforms: linux/386,linux/amd64,linux/arm/v6,linux/arm/v7,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:3.0.0-preview1-alpine
+          labels: |
+            org.opencontainers.image.title=${{ github.event.repository.name }}
+            org.opencontainers.image.description=${{ github.event.repository.description }}
+            org.opencontainers.image.url=${{ github.event.repository.html_url }}
+            org.opencontainers.image.source=${{ github.event.repository.clone_url }}
+            org.opencontainers.image.version=${{ steps.prep.outputs.version }}
+            org.opencontainers.image.created=${{ steps.prep.outputs.created }}
+            org.opencontainers.image.revision=${{ github.sha }}
+            org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
