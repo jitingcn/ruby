@@ -3,8 +3,8 @@ name: Build images
 on:
   push:
   pull_request:
-  schedule:
-    - cron: 0 0 * * 1
+  # schedule:
+  #   - cron: 0 0 * * 1
   workflow_dispatch:
 
 jobs:  
@@ -35,7 +35,7 @@ jobs:
         with:
           context: 2.7/buster/slim
           file: 2.7/buster/slim/Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:2.7.2-slim-buster
@@ -79,7 +79,7 @@ jobs:
         with:
           context: 2.7/buster
           file: 2.7/buster/Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:2.7.2-buster
@@ -124,7 +124,7 @@ jobs:
         with:
           context: 2.7/alpine3.12
           file: 2.7/alpine3.12/Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:2.7.2-alpine
@@ -168,7 +168,7 @@ jobs:
         with:
           context: 3.0/buster/slim
           file: 3.0/buster/slim/Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:3.0.0-preview2-slim-buster
@@ -210,7 +210,7 @@ jobs:
         with:
           context: 3.0/alpine3.12
           file: 3.0/alpine3.12/Dockerfile
-          platforms: linux/386,linux/amd64,linux/arm64
+          platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
             jiting/ruby:3.0.0-preview2-alpine
