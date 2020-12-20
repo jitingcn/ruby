@@ -141,7 +141,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
-  slim-3_0_preview:
+  slim-3_0_rc1:
     runs-on: ubuntu-latest
 
     steps:
@@ -171,8 +171,8 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:3.0.0-preview2-slim-buster
-            jiting/ruby:3.0.0-preview2-slim
+            jiting/ruby:3.0.0-rc1-slim-buster
+            jiting/ruby:3.0.0-rc1-slim
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
             org.opencontainers.image.description=${{ github.event.repository.description }}
@@ -183,7 +183,7 @@ jobs:
             org.opencontainers.image.revision=${{ github.sha }}
             org.opencontainers.image.licenses=${{ github.event.repository.license.spdx_id }}
 
-  alpine-3_0_preview:
+  alpine-3_0_rc1:
     runs-on: ubuntu-latest
 
     steps:
@@ -213,7 +213,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:3.0.0-preview2-alpine
+            jiting/ruby:3.0.0-rc1-alpine
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
             org.opencontainers.image.description=${{ github.event.repository.description }}
