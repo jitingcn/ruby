@@ -38,7 +38,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:2.7.2-slim-buster
+            jiting/ruby:2.7.3-slim-buster
             jiting/ruby:2.7-slim-buster
             jiting/ruby:2.7-slim
           labels: |
@@ -81,9 +81,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:2.7.2-buster
+            jiting/ruby:2.7.3-buster
             jiting/ruby:2.7-buster
-            jiting/ruby:2.7.2
+            jiting/ruby:2.7.3
             jiting/ruby:2.7
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
@@ -125,7 +125,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:2.7.2-alpine
+            jiting/ruby:2.7.3-alpine
             jiting/ruby:2.7-alpine
           labels: |
             org.opencontainers.image.title=${{ github.event.repository.name }}
@@ -167,7 +167,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:3.0.0-slim-buster
+            jiting/ruby:3.0.1-slim-buster
             jiting/ruby:3.0-slim-buster
             jiting/ruby:3.0-slim
             jiting/ruby:slim
@@ -211,9 +211,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:3.0.0-buster
+            jiting/ruby:3.0.1-buster
             jiting/ruby:3.0-buster
-            jiting/ruby:3.0.0
+            jiting/ruby:3.0.1
             jiting/ruby:3.0
             jiting/ruby:buster
           labels: |
@@ -256,7 +256,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
           tags: |
-            jiting/ruby:3.0.0-alpine
+            jiting/ruby:3.0.1-alpine
             jiting/ruby:3.0-alpine
             jiting/ruby:alpine
             jiting/ruby:latest
