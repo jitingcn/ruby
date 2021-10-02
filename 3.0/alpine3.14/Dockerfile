@@ -1,4 +1,6 @@
-FROM alpine:3.12
+FROM alpine:3.14
+
+COPY /patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
 
 RUN apk add --no-cache \
 		gmp-dev
@@ -16,8 +18,8 @@ ENV RUBY_MAJOR 3.0
 ENV RUBY_VERSION 3.0.2
 ENV RUBY_DOWNLOAD_SHA256 570e7773100f625599575f363831166d91d49a1ab97d3ab6495af44774155c40
 
-ENV	jemalloc_pkgver 5.2.1
-ENV jemalloc_sha512 0bbb77564d767cef0c6fe1b97b705d368ddb360d55596945aea8c3ba5889fbce10479d85ad492c91d987caacdbbdccc706aa3688e321460069f00c05814fae02
+ENV	jemalloc_pkgver 3.6.0
+ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
@@ -54,29 +56,17 @@ RUN set -eux; \
 		zlib-dev \
 	; \
 	wget -O jemalloc.tar.bz2 "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2"; \
-	echo "$jemalloc_sha512 *jemalloc.tar.bz2" | sha512sum -c; \
+	echo "$jemalloc_sha256 *jemalloc.tar.bz2" | sha256sum -c; \
 	mkdir /builder; \
 	tar -xjf jemalloc.tar.bz2 -C /builder --strip-components=1; \
 	rm jemalloc.tar.bz2; \
 	cd /builder; \
-	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --disable-syscall; \
+	patch -t -p1 < /tmp/jemalloc_cxx_fix.patch; \
+	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-shared --disable-static --disable-syscall; \
 	make -j "$(nproc)"; \
-	make DESTDIR="/tmp/pkg" install_include; \
-	make DESTDIR="/tmp/pkg" install_lib; \
-	cp /builder/jemalloc.pc /tmp/pkg; \
-	cd /tmp; \
-	/usr/bin/install -c -d /usr/include/jemalloc; \
-	/usr/bin/install -c -m 644 /tmp/pkg/usr/include/jemalloc/jemalloc.h /usr/include/jemalloc; \
-	/usr/bin/install -c -d /usr/lib; \
-	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc.so.2 /usr/lib; \
-	ln -sf libjemalloc.so.2 /usr/lib/libjemalloc.so; \
-	/usr/bin/install -c -d /usr/lib; \
-	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc.a /usr/lib; \
-	/usr/bin/install -c -m 755 /tmp/pkg/usr/lib/libjemalloc_pic.a /usr/lib; \
-	/usr/bin/install -c -d /usr/lib/pkgconfig; \
-	/usr/bin/install -c -m 644 /tmp/pkg/jemalloc.pc /usr/lib/pkgconfig; \
-	rm -rf /tmp/pkg; \
-	rm -rf /builder; \
+	make install; \
+	strip --strip-debug "/usr/lib/libjemalloc.so"; \
+	rm -rf "/usr/lib/pkgconfig"; \
 	\
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
@@ -116,13 +106,14 @@ RUN set -eux; \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
+	strip --strip-all /usr/local/bin/ruby; \
 	\
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-			| sed s/"so:libjemalloc.so.2"// \
+			| sed s/"so:libjemalloc.so.1"// \
 	)"; \
 	apk add --no-network --virtual .ruby-rundeps \
 		$runDeps \
@@ -153,7 +144,11 @@ RUN set -eux; \
 # Sanity check for jemalloc
 RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"; \
 	ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
+RUN MALLOC_CONF="stats_print:true" \
+  LD_PRELOAD="/usr/lib/libjemalloc.so" \
+  ruby -e "exit" 2>&1 | grep "3.6.0-0"
 
+ENV LD_PRELOAD=/usr/lib/libjemalloc.so
 # don't create ".bundle" in all our apps
 ENV GEM_HOME /usr/local/bundle
 ENV BUNDLE_SILENCE_ROOT_WARNING=1 \
