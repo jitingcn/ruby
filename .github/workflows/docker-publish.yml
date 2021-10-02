@@ -63,8 +63,6 @@ jobs:
           tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
-      - name: '"docker images"'
-        run: ${{ matrix.runs.images }}
       -
         name: Build and push
         uses: docker/build-push-action@v2
