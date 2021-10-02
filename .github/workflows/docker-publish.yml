@@ -58,9 +58,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ matrix.meta.dockerfiles }}
           load: true
-          tags: ${{ matrix.meta.entries.tags }}
+          file: ${{ join(matrix.meta.dockerfiles) }}
+          tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
       - name: Test ${{ matrix.name }}
@@ -74,5 +74,5 @@ jobs:
           context: .
           platforms: linux/amd64,linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          file: ${{ matrix.meta.dockerfiles }}
-          tags: ${{ matrix.meta.entries.tags }}
+          file: ${{ join(matrix.meta.dockerfiles) }}
+          tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
