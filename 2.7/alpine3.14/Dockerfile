@@ -1,9 +1,22 @@
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
 FROM alpine:3.14
 
-COPY /patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
+COPY patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
 
-RUN apk add --no-cache \
-		gmp-dev
+RUN set -eux; \
+	apk add --no-cache \
+		bzip2 \
+		ca-certificates \
+		gmp-dev \
+		libffi-dev \
+		procps \
+		yaml-dev \
+		zlib-dev \
+	;
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -18,14 +31,14 @@ ENV RUBY_MAJOR 2.7
 ENV RUBY_VERSION 2.7.4
 ENV RUBY_DOWNLOAD_SHA256 2a80824e0ad6100826b69b9890bf55cfc4cf2b61a1e1330fccbcb30c46cef8d7
 
-ENV	jemalloc_pkgver 3.6.0
+ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
-# readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 RUN set -eux; \
 	\
+# readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
 		bison \
@@ -34,8 +47,8 @@ RUN set -eux; \
 		ca-certificates \
 		coreutils \
 		dpkg-dev dpkg \
-		gcc \
 		g++ \
+		gcc \
 		gdbm-dev \
 		glib-dev \
 		libc-dev \
@@ -56,19 +69,16 @@ RUN set -eux; \
 		yaml-dev \
 		zlib-dev \
 	; \
-	wget -O jemalloc.tar.bz2 "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2"; \
-	echo "$jemalloc_sha256 *jemalloc.tar.bz2" | sha256sum -c; \
-	mkdir /builder; \
-	tar -xjf jemalloc.tar.bz2 -C /builder --strip-components=1; \
-	rm jemalloc.tar.bz2; \
-	cd /builder; \
-	patch -t -p1 < /tmp/jemalloc_cxx_fix.patch; \
-	rm /tmp/jemalloc_cxx_fix.patch; \
-	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-shared --disable-static --disable-syscall; \
-	make -j "$(nproc)"; \
-	make install; \
-	strip --strip-debug "/usr/lib/libjemalloc.so"; \
-	rm -rf "/usr/lib/pkgconfig"; \
+	\
+	mkdir /jemalloc-stable && cd /jemalloc-stable && \
+		wget "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2" && \
+		echo "$jemalloc_sha256 *jemalloc-$jemalloc_pkgver.tar.bz2" | sha256sum -c - && \
+		tar -xjf "jemalloc-$jemalloc_pkgver.tar.bz2" && cd "jemalloc-$jemalloc_pkgver"; \
+		patch -t -p1 < /tmp/jemalloc_cxx_fix.patch && rm /tmp/jemalloc_cxx_fix.patch; \
+		./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var && \
+		make -j "$(nproc)" && make install && \
+		strip --strip-debug "/usr/lib/libjemalloc.so" && rm -rf "/usr/lib/pkgconfig"; \
+		cd / && rm -rf /jemalloc-stable; \
 	\
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
@@ -87,6 +97,9 @@ RUN set -eux; \
 	patch -p1 -i thread-stack-fix.patch; \
 	rm thread-stack-fix.patch; \
 	\
+# the configure script does not detect isnan/isinf as macros
+	export ac_cv_func_isnan=yes ac_cv_func_isinf=yes; \
+	\
 # hack in "ENABLE_PATH_CHECK" disabling to suppress:
 #   warning: Insecure world writable dir
 	{ \
@@ -98,8 +111,6 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-# the configure script does not detect isnan/isinf as macros
-	export ac_cv_func_isnan=yes ac_cv_func_isinf=yes; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
@@ -117,15 +128,7 @@ RUN set -eux; \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
 			| sed s/"so:libjemalloc.so.1"// \
 	)"; \
-	apk add --no-network --virtual .ruby-rundeps \
-		$runDeps \
-		bzip2 \
-		ca-certificates \
-		libffi-dev \
-		procps \
-		yaml-dev \
-		zlib-dev \
-	; \
+	apk add --no-network --virtual .ruby-rundeps $runDeps; \
 	apk del --no-network .ruby-builddeps; \
 	\
 	cd /; \
@@ -133,10 +136,13 @@ RUN set -eux; \
 	rm /usr/lib/libjemalloc.a; \
 	rm /usr/lib/libjemalloc_pic.a; \
 # verify we have no "ruby" packages installed
-	! apk --no-network list --installed \
-		| grep -v '^[.]ruby-rundeps' \
-		| grep -i ruby \
-	; \
+	if \
+		apk --no-network list --installed \
+			| grep -v '^[.]ruby-rundeps' \
+			| grep -i ruby \
+	; then \
+		exit 1; \
+	fi; \
 	[ "$(command -v ruby)" = '/usr/local/bin/ruby' ]; \
 # rough smoke test
 	ruby --version; \
@@ -147,8 +153,8 @@ RUN set -eux; \
 RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"; \
 	ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
 RUN MALLOC_CONF="stats_print:true" \
-  LD_PRELOAD="/usr/lib/libjemalloc.so" \
-  ruby -e "exit" 2>&1 | grep "3.6.0-0"
+	LD_PRELOAD="/usr/lib/libjemalloc.so" \
+	ruby -e "exit" 2>&1 | grep "3.6.0-0"
 
 ENV LD_PRELOAD=/usr/lib/libjemalloc.so
 # don't create ".bundle" in all our apps

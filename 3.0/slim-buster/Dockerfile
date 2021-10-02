@@ -1,4 +1,25 @@
-FROM buildpack-deps:%%PLACEHOLDER%%
+#
+# NOTE: THIS DOCKERFILE IS GENERATED VIA "apply-templates.sh"
+#
+# PLEASE DO NOT EDIT IT DIRECTLY.
+#
+FROM debian:buster-slim
+
+COPY patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
+
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		bzip2 \
+		ca-certificates \
+		libffi-dev \
+		libgmp-dev \
+		libssl-dev \
+		libyaml-dev \
+		procps \
+		zlib1g-dev \
+	; \
+	rm -rf /var/lib/apt/lists/*
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -9,10 +30,12 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR %%VERSION%%
-ENV RUBY_VERSION %%FULL_VERSION%%
-ENV RUBY_DOWNLOAD_SHA256 %%SHA256%%
-ENV RUBYGEMS_VERSION %%RUBYGEMS%%
+ENV RUBY_MAJOR 3.0
+ENV RUBY_VERSION 3.0.2
+ENV RUBY_DOWNLOAD_SHA256 570e7773100f625599575f363831166d91d49a1ab97d3ab6495af44774155c40
+
+ENV jemalloc_pkgver 3.6.0
+ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
@@ -25,9 +48,31 @@ RUN set -eux; \
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
-		libjemalloc-dev \
+		autoconf \
+		g++ \
+		gcc \
+		libbz2-dev \
+		libgdbm-compat-dev \
+		libglib2.0-dev \
+		libncurses-dev \
+		libreadline-dev \
+		libxml2-dev \
+		libxslt-dev \
+		make \
+		wget \
+		xz-utils \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
+	\
+	mkdir /jemalloc-stable && cd /jemalloc-stable && \
+		wget "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2" && \
+		echo "$jemalloc_sha256 *jemalloc-$jemalloc_pkgver.tar.bz2" | sha256sum -c - && \
+		tar -xjf "jemalloc-$jemalloc_pkgver.tar.bz2" && cd "jemalloc-$jemalloc_pkgver"; \
+		patch -t -p1 < /tmp/jemalloc_cxx_fix.patch && rm /tmp/jemalloc_cxx_fix.patch; \
+		./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var && \
+		make -j "$(nproc)" && make install && \
+		strip --strip-debug "/usr/lib/libjemalloc.so" && rm -rf "/usr/lib/pkgconfig"; \
+		cd / && rm -rf /jemalloc-stable; \
 	\
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
@@ -52,17 +97,19 @@ RUN set -eux; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
-        --with-jemalloc \
 		--enable-shared \
+		--with-jemalloc \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
+	strip --strip-all /usr/local/bin/ruby; \
 	\
 	apt-mark auto '.*' > /dev/null; \
 	apt-mark manual $savedAptMark > /dev/null; \
 	find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
 		| awk '/=>/ { print $(NF-1) }' \
 		| sort -u \
+		| grep -vE '^/usr/local/lib/' \
 		| xargs -r dpkg-query --search \
 		| cut -d: -f1 \
 		| sort -u \
@@ -72,11 +119,10 @@ RUN set -eux; \
 	\
 	cd /; \
 	rm -r /usr/src/ruby; \
-# make sure bundled "rubygems" is older than RUBYGEMS_VERSION (https://github.com/docker-library/ruby/issues/246)
-	ruby -e 'exit(Gem::Version.create(ENV["RUBYGEMS_VERSION"]) > Gem::Version.create(Gem::VERSION))'; \
-	gem update --system "$RUBYGEMS_VERSION" && rm -r /root/.gem/; \
+	rm /usr/lib/libjemalloc.a; \
+	rm /usr/lib/libjemalloc_pic.a; \
 # verify we have no "ruby" packages installed
-	! dpkg -l | grep -i ruby; \
+	if dpkg -l | grep -i ruby; then exit 1; fi; \
 	[ "$(command -v ruby)" = '/usr/local/bin/ruby' ]; \
 # rough smoke test
 	ruby --version; \
@@ -84,8 +130,13 @@ RUN set -eux; \
 	bundle --version
 
 # Sanity check for jemalloc
-RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"
+RUN ruby -r rbconfig -e "abort 'jemalloc not enabled' unless RbConfig::CONFIG['LIBS'].include?('jemalloc') || RbConfig::CONFIG['MAINLIBS'].include?('jemalloc')"; \
+	ruby -e 'abort "jemalloc not enabled" if `MALLOC_CONF=stats_print:true ruby -e "exit" 2>&1` == ""'
+RUN MALLOC_CONF="stats_print:true" \
+	LD_PRELOAD="/usr/lib/libjemalloc.so" \
+	ruby -e "exit" 2>&1 | grep "3.6.0-0"
 
+ENV LD_PRELOAD=/usr/lib/libjemalloc.so
 # don't create ".bundle" in all our apps
 ENV GEM_HOME /usr/local/bundle
 ENV BUNDLE_SILENCE_ROOT_WARNING=1 \

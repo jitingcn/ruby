@@ -2,27 +2,20 @@
 set -Eeuo pipefail
 
 declare -A aliases=(
-	[2.8-rc]='rc'
-	[2.7]='2 latest'
-)
-
-defaultDebianSuite='buster'
-declare -A debianSuites=(
-	#[2.7]='buster'
-)
-defaultAlpineVersion='3.12'
-declare -A alpineVersion=(
-	#[2.3]='3.8'
+	[3.0]='3 latest'
+	[2.7]='2'
 )
 
 self="$(basename "$BASH_SOURCE")"
 cd "$(dirname "$(readlink -f "$BASH_SOURCE")")"
 
-versions=( */ )
-versions=( "${versions[@]%/}" )
+if [ "$#" -eq 0 ]; then
+	versions="$(jq -r 'keys | map(@sh) | join(" ")' versions.json)"
+	eval "set -- $versions"
+fi
 
 # sort version numbers with highest first
-IFS=$'\n'; versions=( $(echo "${versions[*]}" | sort -rV) ); unset IFS
+IFS=$'\n'; set -- $(sort -rV <<<"$*"); unset IFS
 
 # get the most recent commit which modified any of "$@"
 fileCommit() {
@@ -34,15 +27,19 @@ dirCommit() {
 	local dir="$1"; shift
 	(
 		cd "$dir"
-		fileCommit \
-			Dockerfile \
-			$(git show HEAD:./Dockerfile | awk '
+		files="$(
+			git show HEAD:./Dockerfile | awk '
 				toupper($1) == "COPY" {
 					for (i = 2; i < NF; i++) {
+						if ($i ~ /^--from=/) {
+							next
+						}
 						print $i
 					}
 				}
-			')
+			'
+		)"
+		fileCommit Dockerfile $files
 	)
 }
 
@@ -63,10 +60,9 @@ getArches() {
 getArches 'ruby'
 
 cat <<-EOH
-# this file is generated via https://github.com/docker-library/ruby/blob/$(fileCommit "$self")/$self
-Maintainers: Tianon Gravi <admwiggin@gmail.com> (@tianon),
-             Joseph Ferguson <yosifkit@gmail.com> (@yosifkit)
-GitRepo: https://github.com/docker-library/ruby.git
+# this file is generated via https://github.com/jitingcn/ruby/blob/$(fileCommit "$self")/$self
+Maintainers: Jiting <jiting@jtcat.com> (@jitingcn)
+GitRepo: https://github.com/jitingcn/ruby.git
 EOH
 
 # prints "$2$1$3$1...$N"
@@ -76,42 +72,52 @@ join() {
 	echo "${out#$sep}"
 }
 
-for version in "${versions[@]}"; do
-	for v in \
-		{buster,stretch}{,/slim} \
-		alpine{3.12,3.11} \
-	; do
+for version; do
+	export version
+	variants="$(jq -r '.[env.version].variants | map(@sh) | join(" ")' versions.json)"
+	eval "variants=( $variants )"
+
+	fullVersion="$(jq -r '.[env.version].version' versions.json)"
+
+	versionAliases=(
+		$fullVersion
+		$version
+		${aliases[$version]:-}
+	)
+
+	defaultDebianVariant="$(jq -r '
+		.[env.version].variants
+		| map(select(
+			startswith("alpine")
+			or startswith("slim-")
+			| not
+		))
+		| .[0]
+	' versions.json)"
+	defaultAlpineVariant="$(jq -r '
+		.[env.version].variants
+		| map(select(
+			startswith("alpine")
+		))
+		| .[0]
+	' versions.json)"
+
+	for v in "${variants[@]}"; do
 		dir="$version/$v"
-		variant="$(basename "$v")"
-
-		if [ "$variant" = 'slim' ]; then
-			# convert "slim" into "slim-buster"
-			# https://github.com/docker-library/ruby/pull/142#issuecomment-320012893
-			variant="$variant-$(basename "$(dirname "$v")")"
-		fi
-
 		[ -f "$dir/Dockerfile" ] || continue
+		variant="$(basename "$v")"
 
 		commit="$(dirCommit "$dir")"
 
-		fullVersion="$(git show "$commit":"$dir/Dockerfile" | awk '$1 == "ENV" && $2 == "RUBY_VERSION" { print $3; exit }')"
-
-		versionAliases=(
-			$fullVersion
-			$version
-			${aliases[$version]:-}
-		)
-
 		variantAliases=( "${versionAliases[@]/%/-$variant}" )
-		debianSuite="${debianSuites[$version]:-$defaultDebianSuite}"
 		case "$variant" in
-			"$debianSuite")
+			"$defaultDebianVariant")
 				variantAliases+=( "${versionAliases[@]}" )
 				;;
-			*-"$debianSuite")
-				variantAliases+=( "${versionAliases[@]/%/-${variant%-$debianSuite}}" )
+			*-"$defaultDebianVariant")
+				variantAliases+=( "${versionAliases[@]/%/-${variant%-$defaultDebianVariant}}" )
 				;;
-			"alpine${alpineVersion[$version]:-$defaultAlpineVersion}")
+			"$defaultAlpineVariant")
 				variantAliases+=( "${versionAliases[@]/%/-alpine}" )
 				;;
 		esac

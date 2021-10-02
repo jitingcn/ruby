@@ -3,9 +3,23 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM buildpack-deps:buster
+FROM debian:bullseye-slim
 
 COPY patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
+
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		bzip2 \
+		ca-certificates \
+		libffi-dev \
+		libgmp-dev \
+		libssl-dev \
+		libyaml-dev \
+		procps \
+		zlib1g-dev \
+	; \
+	rm -rf /var/lib/apt/lists/*
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -16,9 +30,9 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR 3.0
-ENV RUBY_VERSION 3.0.2
-ENV RUBY_DOWNLOAD_SHA256 570e7773100f625599575f363831166d91d49a1ab97d3ab6495af44774155c40
+ENV RUBY_MAJOR 2.7
+ENV RUBY_VERSION 2.7.4
+ENV RUBY_DOWNLOAD_SHA256 2a80824e0ad6100826b69b9890bf55cfc4cf2b61a1e1330fccbcb30c46cef8d7
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -34,6 +48,19 @@ RUN set -eux; \
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
+		autoconf \
+		g++ \
+		gcc \
+		libbz2-dev \
+		libgdbm-compat-dev \
+		libglib2.0-dev \
+		libncurses-dev \
+		libreadline-dev \
+		libxml2-dev \
+		libxslt-dev \
+		make \
+		wget \
+		xz-utils \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 	\

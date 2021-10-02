@@ -3,7 +3,7 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM buildpack-deps:buster
+FROM buildpack-deps:bullseye
 
 COPY patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
 

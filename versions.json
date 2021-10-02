@@ -1,0 +1,24 @@
+{
+  "2.7": {
+    "sha256": "2a80824e0ad6100826b69b9890bf55cfc4cf2b61a1e1330fccbcb30c46cef8d7",
+    "variants": [
+      "bullseye",
+      "slim-bullseye",
+      "buster",
+      "slim-buster",
+      "alpine3.14"
+    ],
+    "version": "2.7.4"
+  },
+  "3.0": {
+    "sha256": "570e7773100f625599575f363831166d91d49a1ab97d3ab6495af44774155c40",
+    "variants": [
+      "bullseye",
+      "slim-bullseye",
+      "buster",
+      "slim-buster",
+      "alpine3.14"
+    ],
+    "version": "3.0.2"
+  }
+}
