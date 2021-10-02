@@ -35,6 +35,7 @@ RUN set -eux; \
 		coreutils \
 		dpkg-dev dpkg \
 		gcc \
+		g++ \
 		gdbm-dev \
 		glib-dev \
 		libc-dev \
@@ -62,6 +63,7 @@ RUN set -eux; \
 	rm jemalloc.tar.bz2; \
 	cd /builder; \
 	patch -t -p1 < /tmp/jemalloc_cxx_fix.patch; \
+	rm /tmp/jemalloc_cxx_fix.patch; \
 	./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var --enable-shared --disable-static --disable-syscall; \
 	make -j "$(nproc)"; \
 	make install; \
