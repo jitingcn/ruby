@@ -63,8 +63,6 @@ jobs:
           tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
-      - name: Test ${{ matrix.name }}
-        run: ${{ matrix.runs.test }}
       - name: '"docker images"'
         run: ${{ matrix.runs.images }}
       -
