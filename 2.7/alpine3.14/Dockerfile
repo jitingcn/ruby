@@ -5,8 +5,6 @@
 #
 FROM alpine:3.14
 
-COPY patch/jemalloc_cxx_fix.patch /tmp/jemalloc_cxx_fix.patch
-
 RUN set -eux; \
 	apk add --no-cache \
 		bzip2 \
@@ -74,7 +72,8 @@ RUN set -eux; \
 		wget "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2" && \
 		echo "$jemalloc_sha256 *jemalloc-$jemalloc_pkgver.tar.bz2" | sha256sum -c - && \
 		tar -xjf "jemalloc-$jemalloc_pkgver.tar.bz2" && cd "jemalloc-$jemalloc_pkgver"; \
-		patch -t -p1 < /tmp/jemalloc_cxx_fix.patch && rm /tmp/jemalloc_cxx_fix.patch; \
+		wget https://raw.githubusercontent.com/fullstaq-labs/fullstaq-ruby-server-edition/main/resources/jemalloc_cxx_fix.patch; \
+		patch -t -p1 < jemalloc_cxx_fix.patch && rm jemalloc_cxx_fix.patch; \
 		./configure --prefix=/usr --sysconfdir=/etc --localstatedir=/var && \
 		make -j "$(nproc)" && make install && \
 		strip --strip-debug "/usr/lib/libjemalloc.so" && rm -rf "/usr/lib/pkgconfig"; \

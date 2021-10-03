@@ -33,7 +33,7 @@ jobs:
   test:
     needs: generate-jobs
     strategy: ${{ fromJson(needs.generate-jobs.outputs.strategy) }}
-    name: ${{ matrix.name }}
+    name: ${{ matrix.name }} - linux/amd64
     runs-on: ${{ matrix.os }}
     steps:
       - name: Checkout
@@ -57,18 +57,42 @@ jobs:
         name: Build and export to Docker
         uses: docker/build-push-action@v2
         with:
-          context: .
-          load: true
-          file: ${{ join(matrix.meta.dockerfiles) }}
+          context: ${{ join(matrix.meta.entries.*.directory) }}
+          push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
       - name: History ${{ matrix.name }}
         run: ${{ matrix.runs.history }}
+
+  build-arm64:
+    needs: generate-jobs
+    strategy: ${{ fromJson(needs.generate-jobs.outputs.strategy) }}
+    name: ${{ matrix.name }} - linux/arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
       -
-        name: Build and push
+        name: Set up QEMU
+        uses: docker/setup-qemu-action@v1
+      -
+        name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+      -
+        name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v1 
+        with:
+          username: jiting
+          password: ${{ secrets.DOCKER_TOKEN }}
+      - name: Pull Dependencies
+        run: ${{ matrix.runs.pull }}
+      -
+        name: Build and export to Docker
         uses: docker/build-push-action@v2
         with:
-          context: .
-          platforms: linux/amd64,linux/arm64
+          context: ${{ join(matrix.meta.entries.*.directory) }}
+          platforms: linux/arm64
           push: ${{ github.event_name != 'pull_request' }}
-          file: ${{ join(matrix.meta.dockerfiles) }}
           tags: ${{ join(matrix.meta.entries.*.tags.*, ',') }}
+      - name: History ${{ matrix.name }}
+        run: ${{ matrix.runs.history }}

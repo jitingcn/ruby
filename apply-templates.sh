@@ -41,7 +41,7 @@ for version; do
 		mkdir -p "$dir"
 
 		echo "processing $dir ..."
-		cp patch/jemalloc_cxx_fix.patch "$dir"/
+
 		{
 			generated_warning
 			gawk -f "$jqt" Dockerfile.template
