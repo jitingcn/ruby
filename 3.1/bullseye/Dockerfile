@@ -66,6 +66,10 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	# add jemalloc patch to ruby 3.1
+	wget -O 'ruby_31_jemalloc.patch' 'https://raw.githubusercontent.com/fullstaq-labs/fullstaq-ruby-server-edition/main/resources/ruby_31_jemalloc.patch'; \
+	patch -p1 -ti ruby_31_jemalloc.patch; \
+	rm ruby_31_jemalloc.patch; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
