@@ -3,7 +3,7 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.15
+FROM alpine:3.16
 
 RUN set -eux; \
 	apk add --no-cache \
@@ -25,9 +25,9 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR 2.7
-ENV RUBY_VERSION 2.7.6
-ENV RUBY_DOWNLOAD_SHA256 54dcd3044726c4ab75a9d4604720501442b229a3aed6a55fe909567da8807f24
+ENV RUBY_MAJOR 3.1
+ENV RUBY_VERSION 3.1.2
+ENV RUBY_DOWNLOAD_SHA256 ca10d017f8a1b6d247556622c841fc56b90c03b1803f87198da1e4fd3ec3bf2a
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -110,6 +110,10 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	# add jemalloc patch to ruby 3.1
+	wget -O 'ruby_31_jemalloc.patch' 'https://raw.githubusercontent.com/fullstaq-labs/fullstaq-ruby-server-edition/main/resources/ruby_31_jemalloc.patch'; \
+	patch -p1 -ti ruby_31_jemalloc.patch; \
+	rm ruby_31_jemalloc.patch; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
