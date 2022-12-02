@@ -26,8 +26,8 @@ RUN set -eux; \
 
 ENV LANG C.UTF-8
 ENV RUBY_MAJOR 2.7
-ENV RUBY_VERSION 2.7.6
-ENV RUBY_DOWNLOAD_SHA256 54dcd3044726c4ab75a9d4604720501442b229a3aed6a55fe909567da8807f24
+ENV RUBY_VERSION 2.7.7
+ENV RUBY_DOWNLOAD_SHA256 b38dff2e1f8ce6e5b7d433f8758752987a6b2adfd9bc7571dbc42ea5d04e3e4c
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -109,6 +109,15 @@ RUN set -eux; \
 	mv file.c.new file.c; \
 	\
 	autoconf; \
+	# fix builds on arm32v6/7 and s390x: https://github.com/docker-library/ruby/issues/308
+	# and don't break the other arches: https://github.com/docker-library/ruby/issues/365
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		s390x | armhf | armv7) \
+			apk add --no-cache libucontext-dev; \
+			export LIBS='-lucontext'; \
+			;; \
+	esac; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	./configure \
 		--build="$gnuArch" \

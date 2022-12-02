@@ -3,7 +3,7 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM debian:bullseye-slim
+FROM debian:buster-slim
 
 RUN set -eux; \
 	apt-get update; \
@@ -28,9 +28,9 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR 3.1
-ENV RUBY_VERSION 3.1.3
-ENV RUBY_DOWNLOAD_SHA256 4ee161939826bcdfdafa757cf8e293a7f14e357f62be7144f040335cc8c7371a
+ENV RUBY_MAJOR 3.2-rc
+ENV RUBY_VERSION 3.2.0-preview3
+ENV RUBY_DOWNLOAD_SHA256 d3f5619de544240d92a5d03aa289e71bd1103379622c523a0e80ed029a74b3bb
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
