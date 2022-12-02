@@ -117,7 +117,7 @@ RUN set -eux; \
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
 	# add jemalloc patch to ruby 3.1 and above
-	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
+	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/23756069fba152a8f5ca75328d88ae23/raw/b960e4acd08529792ebf7c6ed699be28669a353d/ruby_32_preview3_jemalloc.patch'; \
 	patch -p1 -ti ruby_32_jemalloc.patch; \
 	rm ruby_32_jemalloc.patch; \
 	./configure \
