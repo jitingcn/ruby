@@ -15,8 +15,8 @@ RUN set -eux; \
 
 ENV LANG C.UTF-8
 ENV RUBY_MAJOR 3.2-rc
-ENV RUBY_VERSION 3.2.0-preview3
-ENV RUBY_DOWNLOAD_SHA256 d3f5619de544240d92a5d03aa289e71bd1103379622c523a0e80ed029a74b3bb
+ENV RUBY_VERSION 3.2.0-rc1
+ENV RUBY_DOWNLOAD_SHA256 0d45b3af14e84337882a2021235a091ae5dcfc0baaf31dccc479b71d96dd07bc
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -66,8 +66,8 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-	# add jemalloc patch to ruby 3.1 and above
-	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/23756069fba152a8f5ca75328d88ae23/raw/b960e4acd08529792ebf7c6ed699be28669a353d/ruby_32_preview3_jemalloc.patch'; \
+	# add ruby 3.2-rc jemalloc patch
+	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
 	patch -p1 -ti ruby_32_jemalloc.patch; \
 	rm ruby_32_jemalloc.patch; \
 	./configure \
