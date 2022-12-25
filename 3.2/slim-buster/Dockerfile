@@ -3,7 +3,21 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM buildpack-deps:bullseye
+FROM debian:buster-slim
+
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		bzip2 \
+		ca-certificates \
+		libffi-dev \
+		libgmp-dev \
+		libssl-dev \
+		libyaml-dev \
+		procps \
+		zlib1g-dev \
+	; \
+	rm -rf /var/lib/apt/lists/*
 
 # skip installing gem documentation
 RUN set -eux; \
@@ -14,9 +28,9 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
-ENV RUBY_MAJOR 3.2-rc
-ENV RUBY_VERSION 3.2.0-rc1
-ENV RUBY_DOWNLOAD_SHA256 0d45b3af14e84337882a2021235a091ae5dcfc0baaf31dccc479b71d96dd07bc
+ENV RUBY_MAJOR 3.2
+ENV RUBY_VERSION 3.2.0
+ENV RUBY_DOWNLOAD_SHA256 d2f4577306e6dd932259693233141e5c3ec13622c95b75996541b8d5b68b28b4
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -32,6 +46,19 @@ RUN set -eux; \
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
+		autoconf \
+		g++ \
+		gcc \
+		libbz2-dev \
+		libgdbm-compat-dev \
+		libglib2.0-dev \
+		libncurses-dev \
+		libreadline-dev \
+		libxml2-dev \
+		libxslt-dev \
+		make \
+		wget \
+		xz-utils \
 	; \
 	rm -rf /var/lib/apt/lists/*; \
 	\
@@ -66,7 +93,7 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-	# add ruby 3.2-rc jemalloc patch
+	# add ruby 3.2 jemalloc patch
 	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
 	patch -p1 -ti ruby_32_jemalloc.patch; \
 	rm ruby_32_jemalloc.patch; \
