@@ -26,8 +26,8 @@ RUN set -eux; \
 
 ENV LANG C.UTF-8
 ENV RUBY_MAJOR 3.2
-ENV RUBY_VERSION 3.2.0
-ENV RUBY_DOWNLOAD_SHA256 d2f4577306e6dd932259693233141e5c3ec13622c95b75996541b8d5b68b28b4
+ENV RUBY_VERSION 3.2.1
+ENV RUBY_DOWNLOAD_SHA256 746c8661ae25449cbdc5297d1092702e93e66f365a75fecb740d4f292ced630c
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -36,11 +36,6 @@ ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf
 #   we purge system ruby later to make sure our final image uses what we just built
 RUN set -eux; \
 	\
-	yjit=; \
-	apkArch="$(apk --print-arch)"; \
-	case "$apkArch" in \
-		x86_64 | aarch64) yjit=1 ;; \
-	esac; \
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
@@ -71,8 +66,29 @@ RUN set -eux; \
 		xz \
 		yaml-dev \
 		zlib-dev \
-		${yjit:+rust} \
 	; \
+	\
+	rustArch=; \
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		'x86_64') rustArch='x86_64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-musl/rustup-init'; rustupSha256='95427cb0592e32ed39c8bd522fe2a40a746ba07afb8149f91e936cddb4d6eeac' ;; \
+		'aarch64') rustArch='aarch64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-musl/rustup-init'; rustupSha256='7855404cdc50c20040c743800c947b6f452490d47f8590a4a83bc6f75d1d8eda' ;; \
+	esac; \
+	\
+	if [ -n "$rustArch" ]; then \
+		mkdir -p /tmp/rust; \
+		\
+		wget -O /tmp/rust/rustup-init "$rustupUrl"; \
+		echo "$rustupSha256 */tmp/rust/rustup-init" | sha256sum --check --strict; \
+		chmod +x /tmp/rust/rustup-init; \
+		\
+		export RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \
+		export PATH="$CARGO_HOME/bin:$PATH"; \
+		/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.66.0' --default-host "$rustArch"; \
+		\
+		rustc --version; \
+		cargo --version; \
+	fi; \
 	\
 	mkdir /jemalloc-stable && cd /jemalloc-stable && \
 		wget "https://github.com/jemalloc/jemalloc/releases/download/$jemalloc_pkgver/jemalloc-$jemalloc_pkgver.tar.bz2" && \
@@ -125,12 +141,13 @@ RUN set -eux; \
 		--disable-install-doc \
 		--enable-shared \
 		--with-jemalloc \
-		${yjit:+--enable-yjit} \
+		${rustArch:+--enable-yjit} \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
 	strip --strip-all /usr/local/bin/ruby; \
 	\
+	rm -rf /tmp/rust; \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \

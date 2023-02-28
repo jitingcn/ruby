@@ -38,15 +38,17 @@ for version in "${versions[@]}"; do
 		if \
 			{
 				versionReleasePage="$(grep "<td>Ruby $tryVersion</td>" -A 2 <<<"$releasesPage" | awk -F '"' '$1 == "<td><a href=" { print $2; exit }')" \
-					&& [ "$versionReleasePage" ] \
-					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" |tac|tac| grep "ruby-$tryVersion.tar.xz" -A 5 | awk '$1 == "SHA256:" { print $2; exit }')" \
-					&& [ "$shaVal" ]
+					&& [ -n "$versionReleasePage" ] \
+					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
+					&& shaVal="$(awk <<<"$shaVal" '$1 == "SHA256:" { print $2; exit }')" \
+					&& [ -n "$shaVal" ]
 			} \
 			|| {
 				versionReleasePage="$(echo "$newsPage" | grep -oE '<a href="[^"]+">Ruby '"$tryVersion"' Released</a>' | cut -d'"' -f2)" \
-					&& [ "$versionReleasePage" ] \
-					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" |tac|tac| grep "ruby-$tryVersion.tar.xz" -A 5 | awk '$1 == "SHA256:" { print $2; exit }')" \
-					&& [ "$shaVal" ]
+					&& [ -n "$versionReleasePage" ] \
+					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
+					&& shaVal="$(awk <<<"$shaVal" '$1 == "SHA256:" { print $2; exit }')" \
+					&& [ -n "$shaVal" ]
 			} \
 		; then
 			fullVersion="$tryVersion"
@@ -62,8 +64,8 @@ for version in "${versions[@]}"; do
 	echo "$version: $fullVersion; $shaVal"
 
 	export fullVersion shaVal
-	json="$(jq <<<"$json" -c '
-		.[env.version] = {
+	doc="$(jq -nc '
+		{
 			version: env.fullVersion,
 			sha256: env.shaVal,
 			variants: [
@@ -86,6 +88,24 @@ for version in "${versions[@]}"; do
 			],
 		}
 	')"
+	case "$rcVersion" in
+		2.7 | 3.0 | 3.1) ;;
+		*)
+			# YJIT
+			doc="$(jq <<<"$doc" -sc '
+				.[1][].arches? |= if . then with_entries(select(.key as $arch | [
+					# https://github.com/ruby/ruby/blob/v3_2_0/doc/yjit/yjit.md ("currently supported for macOS and Linux on x86-64 and arm64/aarch64 CPUs")
+					# https://github.com/ruby/ruby/blob/v3_2_0/configure.ac#L3757-L3761
+					"amd64",
+					"arm64v8",
+					empty # trailing comma
+				] | index($arch))) else empty end
+				| add
+			' - rust.json)"
+			;;
+	esac
+
+	json="$(jq <<<"$json" -c --argjson doc "$doc" '.[env.version] = $doc')"
 done
 
 jq <<<"$json" -S . > versions.json
