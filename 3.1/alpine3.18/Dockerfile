@@ -3,7 +3,7 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.16
+FROM alpine:3.18
 
 RUN set -eux; \
 	apk add --no-cache \
