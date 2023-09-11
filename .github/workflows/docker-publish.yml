@@ -26,7 +26,7 @@ jobs:
         name: Generate Jobs
         run: |
           export BASHBREW_NAMESPACE=jiting
-          strategy="$("$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq '. |= .+ {"max-parallel": 2}')"
+          strategy="$("$BASHBREW_SCRIPTS/github-actions/generate.sh" | jq --compact-output --unbuffered '. |= .+ {"max-parallel": 2}')"
           echo "strategy=$strategy" >> "$GITHUB_OUTPUT"
           jq . <<<"$strategy" # sanity check / debugging aid
 
