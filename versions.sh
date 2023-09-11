@@ -12,8 +12,8 @@ else
 fi
 versions=( "${versions[@]%/}" )
 
-releasesPage="$(curl -fsSL 'https://www.ruby-lang.org/en/downloads/releases/')"
-newsPage="$(curl -fsSL 'https://www.ruby-lang.org/en/news/')" # occasionally, releases don't show up on the Releases page (see https://github.com/ruby/www.ruby-lang.org/blob/master/_data/releases.yml)
+releasesPage="$(curl -fsSL 'https://www.ruby-lang.org/en/downloads/releases/'| grep -A 2 '<td>Ruby')" # very wide grep to cut down on "set -x" output when debugging (should match the one later)
+newsPage="$(curl -fsSL 'https://www.ruby-lang.org/en/news/'| grep 'Released</a>')" # occasionally, releases don't show up on the Releases page (see https://github.com/ruby/www.ruby-lang.org/blob/master/_data/releases.yml)
 # TODO consider parsing https://github.com/ruby/www.ruby-lang.org/blob/master/_data/downloads.yml as well
 
 for version in "${versions[@]}"; do
@@ -39,14 +39,14 @@ for version in "${versions[@]}"; do
 			{
 				versionReleasePage="$(grep "<td>Ruby $tryVersion</td>" -A 2 <<<"$releasesPage" | awk -F '"' '$1 == "<td><a href=" { print $2; exit }')" \
 					&& [ -n "$versionReleasePage" ] \
-					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
+					&& shaVal="$(curl -fsL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
 					&& shaVal="$(awk <<<"$shaVal" '$1 == "SHA256:" { print $2; exit }')" \
 					&& [ -n "$shaVal" ]
 			} \
 			|| {
-				versionReleasePage="$(echo "$newsPage" | grep -oE '<a href="[^"]+">Ruby '"$tryVersion"' Released</a>' | cut -d'"' -f2)" \
+				versionReleasePage="$(grep -oE '<a href="[^"]+">Ruby '"$tryVersion"' Released</a>' <<<"$newsPage" | cut -d'"' -f2)" \
 					&& [ -n "$versionReleasePage" ] \
-					&& shaVal="$(curl -fsSL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
+					&& shaVal="$(curl -fsL "https://www.ruby-lang.org/$versionReleasePage" | grep "ruby-$tryVersion.tar.xz" -A 5)" \
 					&& shaVal="$(awk <<<"$shaVal" '$1 == "SHA256:" { print $2; exit }')" \
 					&& [ -n "$shaVal" ]
 			} \
@@ -70,15 +70,22 @@ for version in "${versions[@]}"; do
 			sha256: env.shaVal,
 			variants: [
 				(
-					"bullseye",
-					"buster",
-					empty # trailing comma hack
-				| ., "slim-" + .), # https://github.com/docker-library/ruby/pull/142#issuecomment-320012893
-				(
-					# Alpine 3.17+ defaults to OpenSSL 3 which is not supported (yet?) by Ruby 2.7 or 3.0
 					# https://bugs.ruby-lang.org/issues/18658
 					# https://github.com/docker-library/ruby/pull/392#issuecomment-1329896174
-					if [ "2.7", "3.0" ] | index(env.version) then "3.16" else
+					if  "3.0" == env.version then
+						"bullseye",
+						"buster"
+					else
+						"bookworm",
+						"bullseye",
+						empty # trailing comma hack
+					end
+				| ., "slim-" + .), # https://github.com/docker-library/ruby/pull/142#issuecomment-320012893
+				(
+					# Alpine 3.17+ defaults to OpenSSL 3 which is not supported by Ruby 3.0
+					# https://bugs.ruby-lang.org/issues/18658
+					# https://github.com/docker-library/ruby/pull/392#issuecomment-1329896174
+					if "3.0" == env.version then "3.16" else
 						"3.18",
 						"3.17",
 						empty # trailing comma hack
@@ -88,7 +95,7 @@ for version in "${versions[@]}"; do
 		}
 	')"
 	case "$rcVersion" in
-		2.7 | 3.0 | 3.1) ;;
+		3.0 | 3.1) ;;
 		*)
 			# YJIT
 			doc="$(jq <<<"$doc" -sc '
