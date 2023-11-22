@@ -273,11 +273,11 @@ RUN set -eux; \
 	patch -p1 -ti ruby_31_jemalloc.patch; \
 	rm ruby_31_jemalloc.patch; \
 {{ ) else "" end -}}
-{{ if ( [ "3.2-rc" ] | index(env.version) ) then ( -}}
-	# add ruby 3.2-rc jemalloc patch
-	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
-	patch -p1 -ti ruby_32_jemalloc.patch; \
-	rm ruby_32_jemalloc.patch; \
+{{ if ( [ "3.3-rc" ] | index(env.version) ) then ( -}}
+	# add ruby 3.3-rc(preview3) jemalloc patch
+	wget -O 'ruby_33_preview3_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/16c492b36575112febe1c82d3e45fe2a/raw/3597dd83ec317cb612d0f1d5bbe2c5a9e1c3475b/ruby_33_preview3_jemalloc.patch'; \
+	patch -p1 -ti ruby_33_preview3_jemalloc.patch; \
+	rm ruby_33_preview3_jemalloc.patch; \
 {{ ) else "" end -}}
 {{ if ( [ "3.2" ] | index(env.version) ) then ( -}}
 	# add ruby 3.2 jemalloc patch

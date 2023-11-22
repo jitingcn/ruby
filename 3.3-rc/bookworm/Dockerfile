@@ -88,6 +88,10 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
+	# add ruby 3.3-rc(preview3) jemalloc patch
+	wget -O 'ruby_33_preview3_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/16c492b36575112febe1c82d3e45fe2a/raw/3597dd83ec317cb612d0f1d5bbe2c5a9e1c3475b/ruby_33_preview3_jemalloc.patch'; \
+	patch -p1 -ti ruby_33_preview3_jemalloc.patch; \
+	rm ruby_33_preview3_jemalloc.patch; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
