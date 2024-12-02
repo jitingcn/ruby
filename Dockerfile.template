@@ -50,9 +50,17 @@ RUN set -eux; \
 	} >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
+
+# https://www.ruby-lang.org/{{ .post | ltrimstr("/") }}
+{{ if env.version == "3.0" then ( -}}
 ENV RUBY_MAJOR {{ env.version }}
 ENV RUBY_VERSION {{ .version }}
-ENV RUBY_DOWNLOAD_SHA256 {{ .sha256 }}
+ENV RUBY_DOWNLOAD_SHA256 {{ .sha256.xz }}
+{{ ) else ( -}}
+ENV RUBY_VERSION {{ .version }}
+ENV RUBY_DOWNLOAD_URL {{ .url.xz }}
+ENV RUBY_DOWNLOAD_SHA256 {{ .sha256.xz }}
+{{ ) end -}}
 
 ENV jemalloc_pkgver 3.6.0
 ENV jemalloc_sha256 e16c2159dd3c81ca2dc3b5c9ef0d43e1f2f45b04548f42db12e7c12d7bdf84fe
@@ -65,7 +73,10 @@ RUN set -eux; \
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
+{{ if env.version | rtrimstr("-rc") | IN("3.0", "3.1", "3.2") then ( -}}
+{{ # https://github.com/docker-library/ruby/pull/438 -}}
 		bison \
+{{ ) else "" end -}}
 		bzip2 \
 		bzip2-dev \
 		ca-certificates \
@@ -86,7 +97,7 @@ RUN set -eux; \
 		openssl-dev \
 		patch \
 		procps \
-{{ if [ "3.0", "3.1", "3.2" ] | index(env.version | rtrimstr("-rc")) then ( -}}
+{{ if env.version | rtrimstr("-rc") | IN("3.0", "3.1", "3.2") then ( -}}
 		readline-dev \
 {{ ) else "" end -}}
 		ruby \
@@ -99,7 +110,10 @@ RUN set -eux; \
 	savedAptMark="$(apt-mark showmanual)"; \
 	apt-get update; \
 	apt-get install -y --no-install-recommends \
+{{ if env.version | rtrimstr("-rc") | IN("3.0", "3.1", "3.2") then ( -}}
+{{ # https://github.com/docker-library/ruby/pull/438 -}}
 		bison \
+{{ ) else "" end -}}
 		dpkg-dev \
 		libgdbm-dev \
 		ruby \
@@ -111,7 +125,7 @@ RUN set -eux; \
 		libgdbm-compat-dev \
 		libglib2.0-dev \
 		libncurses-dev \
-{{ if [ "3.0", "3.1", "3.2" ] | index(env.version | rtrimstr("-rc")) then ( -}}
+{{ if env.version | rtrimstr("-rc") | IN("3.0", "3.1", "3.2") then ( -}}
 		libreadline-dev \
 {{ ) else "" end -}}
 		libxml2-dev \
@@ -204,7 +218,12 @@ RUN set -eux; \
 		strip --strip-debug "/usr/lib/libjemalloc.so" && rm -rf "/usr/lib/pkgconfig"; \
 		cd / && rm -rf /jemalloc-stable; \
 	\
+{{ if env.version == "3.0" then ( -}}
+{{ if .url.xz != "https://cache.ruby-lang.org/pub/ruby/\(env.version | rtrimstr("-rc"))/ruby-\(.version).tar.xz" then error("url for \(.version) is not as expected!") else "" end -}}
 	wget -O ruby.tar.xz "https://cache.ruby-lang.org/pub/ruby/${RUBY_MAJOR%-rc}/ruby-$RUBY_VERSION.tar.xz"; \
+{{ ) else ( -}}
+	wget -O ruby.tar.xz "$RUBY_DOWNLOAD_URL"; \
+{{ ) end -}}
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
 	\
 	mkdir -p /usr/src/ruby; \
@@ -267,19 +286,19 @@ RUN set -eux; \
 	esac; \
 {{ ) else "" end -}}
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-{{ if ( [ "3.1" ] | index(env.version) ) then ( -}}
+	{{ if env.version | rtrimstr("-rc") | IN("3.1") then ( -}}
 	# add ruby 3.1 jemalloc patch
 	wget -O 'ruby_31_jemalloc.patch' 'https://raw.githubusercontent.com/fullstaq-ruby/server-edition/main/resources/ruby_31_jemalloc.patch'; \
 	patch -p1 -ti ruby_31_jemalloc.patch; \
 	rm ruby_31_jemalloc.patch; \
 {{ ) else "" end -}}
-{{ if ( [ "3.3-rc" ] | index(env.version) ) then ( -}}
+{{ if env.version | IN("3.3-rc") then ( -}}
 	# add ruby 3.3-rc(preview3) jemalloc patch
 	wget -O 'ruby_33_preview3_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/16c492b36575112febe1c82d3e45fe2a/raw/751ad215e3e2f12a3a00a55f649355826aab4ce4/ruby_33_preview3_jemalloc.patch'; \
 	patch -p1 -ti ruby_33_preview3_jemalloc.patch; \
 	rm ruby_33_preview3_jemalloc.patch; \
 {{ ) else "" end -}}
-{{ if ( [ "3.2" ] | index(env.version) ) then ( -}}
+{{ if env.version | rtrimstr("-rc") | IN("3.2") then ( -}}
 	# add ruby 3.2 jemalloc patch
 	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
 	patch -p1 -ti ruby_32_jemalloc.patch; \
@@ -315,7 +334,7 @@ RUN set -eux; \
 	apt-mark auto '.*' > /dev/null; \
 	apt-mark manual $savedAptMark > /dev/null; \
 	find /usr/local -type f -executable -not \( -name '*tkinter*' \) -exec ldd '{}' ';' \
-		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); print so }' \
+		| awk '/=>/ { so = $(NF-1); if (index(so, "/usr/local/") == 1) { next }; gsub("^/(usr/)?", "", so); printf "*%s\n", so }' \
 		| sort -u \
 		| xargs -r dpkg-query --search \
 		| cut -d: -f1 \
@@ -360,7 +379,9 @@ ENV GEM_HOME /usr/local/bundle
 ENV BUNDLE_SILENCE_ROOT_WARNING=1 \
 	BUNDLE_APP_CONFIG="$GEM_HOME"
 ENV PATH $GEM_HOME/bin:$PATH
-# adjust permissions of a few directories for running "gem install" as an arbitrary user
-RUN mkdir -p "$GEM_HOME" && chmod 1777 "$GEM_HOME"
+RUN set -eux; \
+	mkdir "$GEM_HOME"; \
+# adjust permissions of GEM_HOME for running "gem install" as an arbitrary user
+	chmod 1777 "$GEM_HOME"
 
 CMD [ "irb" ]

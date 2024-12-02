@@ -1,113 +1,217 @@
 {
   "3.0": {
-    "sha256": "b5cbee93e62d85cfb2a408c49fa30a74231ae8409c2b3858e5f5ea254d7ddbd1",
+    "version": "3.0.7",
+    "date": "2024-04-23",
+    "post": "/en/news/2024/04/23/ruby-3-0-7-released/",
+    "url": {
+      "gz": "https://cache.ruby-lang.org/pub/ruby/3.0/ruby-3.0.7.tar.gz",
+      "xz": "https://cache.ruby-lang.org/pub/ruby/3.0/ruby-3.0.7.tar.xz",
+      "zip": "https://cache.ruby-lang.org/pub/ruby/3.0/ruby-3.0.7.zip"
+    },
+    "size": {
+      "gz": 21268288,
+      "xz": 15848768,
+      "zip": 25652209
+    },
+    "sha1": {
+      "gz": "ec95aee1364fc4d0ca0e8f83c525127016e05c86",
+      "xz": "efc97e609868a19f89653068c4915c162117b721",
+      "zip": "b258a1bfcd49fb801b83a0aec90a8bb3989e9e42"
+    },
+    "sha256": {
+      "gz": "2a3411977f2850431136b0fab8ad53af09fb74df2ee2f4fb7f11b378fe034388",
+      "xz": "1748338373c4fad80129921080d904aca326e41bd9589b498aa5ee09fd575bab",
+      "zip": "163d752070a2ba1a015f004ae75e38ac9aa44bc4ebfafb55d5ff184cc72db5be"
+    },
+    "sha512": {
+      "gz": "66e5116ddd027ab1b27d466104a5b440889318b4f2f74b5fdf3099812bf5f7ef77be62fe1df37e0dc7cd5b2f5efe7fee5b9096910ce815ca4126577cb2abfaa7",
+      "xz": "4760dc7d1345279b53cff30f3dd015b67f6a505e5028357f046dbf23b15a52d09f7d91fcfe5cb75d6c3222e7283aad12b97b36f5de0ff959f824bd42073f9c48",
+      "zip": "ed5e6d827ba981808bc4d914e400963b4443d522d52dd5d3f645db0cf38b50ab6c9baafac1b5e348e677500a16ceef1a5ac15c6a67003c2b2037cb86c1bd3654"
+    },
     "variants": [
-      "bookworm",
-      "slim-bookworm",
       "bullseye",
       "slim-bullseye",
+      "buster",
+      "slim-buster",
       "alpine3.16"
-    ],
-    "version": "3.0.6"
+    ]
   },
   "3.1": {
-    "sha256": "1b6d6010e76036c937b9671f4752f065aeca800a6c664f71f6c9a699453af94f",
+    "version": "3.1.6",
+    "date": "2024-05-29",
+    "post": "/en/news/2024/05/29/ruby-3-1-6-released/",
+    "url": {
+      "gz": "https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.6.tar.gz",
+      "xz": "https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.6.tar.xz",
+      "zip": "https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.6.zip"
+    },
+    "size": {
+      "gz": 20887803,
+      "xz": 15273916,
+      "zip": 25211787
+    },
+    "sha1": {
+      "gz": "02832465f9b0f68b9fe2c443f9f602d6e840b2ca",
+      "xz": "2671606a00d0ad564fb93f92d093590563c4e25b",
+      "zip": "534e675022dc30c3674ee68a7b2fbe9300d64367"
+    },
+    "sha256": {
+      "gz": "0d0dafb859e76763432571a3109d1537d976266be3083445651dc68deed25c22",
+      "xz": "597bd1849f252d8a6863cb5d38014ac54152b508c36dca156f6356a9e63c6102",
+      "zip": "c21d16e7953d65d05824834e89d7e1a58ccf2bc018fe966f785774ea383f53db"
+    },
+    "sha512": {
+      "gz": "624555ab3681bd6663bca7cf3529a969b9f0f16928559cfb713c57f763506c8740410c9b460d946922994859189ef2b9956167bd31423cf2e3acbf5a30086fe1",
+      "xz": "a3159648706d6d11ce9613201141e884b3accc69bf928c756de8a8f2b71d219886e91435d30cf2c30e85af31f87801138e10106344766100f1b80662c7244652",
+      "zip": "f8b5a0fda8dc0248f29796a0b5b67f93a825a013b92b0db437ecf0a5ffaf06a800285999a0e9a61e890a8000dd2e2c081a6ecb5dae62b1045761a13fd87c397b"
+    },
     "variants": [
       "bookworm",
       "slim-bookworm",
       "bullseye",
       "slim-bullseye",
-      "alpine3.18",
-      "alpine3.17"
-    ],
-    "version": "3.1.4"
+      "alpine3.20",
+      "alpine3.19"
+    ]
   },
   "3.2": {
+    "version": "3.2.6",
+    "date": "2024-10-30",
+    "post": "/en/news/2024/10/30/ruby-3-2-6-released/",
+    "url": {
+      "gz": "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.6.tar.gz",
+      "zip": "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.6.zip",
+      "xz": "https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.6.tar.xz"
+    },
+    "size": {
+      "gz": 20521981,
+      "zip": 24653808,
+      "xz": 15126888
+    },
+    "sha1": {
+      "gz": "bbf265f5e7a3f480056dc2fa6d600a97cba00713",
+      "zip": "efbcfc2c2e238a7201366fdefdcf0dc16e4072af",
+      "xz": "eabbe230df704e7141d53d8221314bb33b5f0dea"
+    },
+    "sha256": {
+      "gz": "d9cb65ecdf3f18669639f2638b63379ed6fbb17d93ae4e726d4eb2bf68a48370",
+      "zip": "36ca2292b48d8f6a0281d6c772dc47c358cb838774addc0344e38d4d2735704f",
+      "xz": "671134022238c2c4a9d79dc7d1e58c909634197617901d25863642f735a27ecb"
+    },
+    "sha512": {
+      "gz": "26ae9439043cf40e5eddde6b92ae51c9e1fa4e89c8ec6da36732c59c14873b022c683fb3007950d372f35de9b62a4fabbbc3ef1f4ef58cd53058bd56e1552cbe",
+      "zip": "8474829ebe13b3357f962571e8114e47634b5ed1f3e2dbfdf4ecb2ece1a3ed354f3506e8526a6768457e980ea4f056d77cd5b547419f2d8f9bea07348f64edc2",
+      "xz": "78f7fc76d47c772b9bc313cbcb57a2c0f1a975e09cfe46a3083f6f603d62b0031bd4c55896c8353c1c343974d45077e06e310111198d870883e06a0cf6fd03ce"
+    },
+    "variants": [
+      "bookworm",
+      "slim-bookworm",
+      "bullseye",
+      "slim-bullseye",
+      "alpine3.20",
+      "alpine3.19"
+    ],
     "rust": {
-      "version": "1.66.0"
+      "version": "1.74.1"
     },
     "rustup": {
       "arches": {
         "amd64": {
           "glibc": {
             "arch": "x86_64-unknown-linux-gnu",
-            "sha256": "5cc9ffd1026e82e7fb2eec2121ad71f4b0f044e88bca39207b3f6b769aaa799c",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-gnu/rustup-init"
+            "sha256": "0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/x86_64-unknown-linux-gnu/rustup-init"
           },
           "musl": {
             "arch": "x86_64-unknown-linux-musl",
-            "sha256": "95427cb0592e32ed39c8bd522fe2a40a746ba07afb8149f91e936cddb4d6eeac",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-musl/rustup-init"
+            "sha256": "7aa9e2a380a9958fc1fc426a3323209b2c86181c6816640979580f62ff7d48d4",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/x86_64-unknown-linux-musl/rustup-init"
           }
         },
         "arm64v8": {
           "glibc": {
             "arch": "aarch64-unknown-linux-gnu",
-            "sha256": "e189948e396d47254103a49c987e7fb0e5dd8e34b200aa4481ecc4b8e41fb929",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-gnu/rustup-init"
+            "sha256": "673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/aarch64-unknown-linux-gnu/rustup-init"
           },
           "musl": {
             "arch": "aarch64-unknown-linux-musl",
-            "sha256": "7855404cdc50c20040c743800c947b6f452490d47f8590a4a83bc6f75d1d8eda",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-musl/rustup-init"
+            "sha256": "b1962dfc18e1fd47d01341e6897cace67cddfabf547ef394e8883939bd6e002e",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/aarch64-unknown-linux-musl/rustup-init"
           }
         }
       },
-      "version": "1.25.1"
-    },
-    "sha256": "4b352d0f7ec384e332e3e44cdbfdcd5ff2d594af3c8296b5636c710975149e23",
-    "variants": [
-      "bookworm",
-      "slim-bookworm",
-      "bullseye",
-      "slim-bullseye",
-      "alpine3.18",
-      "alpine3.17"
-    ],
-    "version": "3.2.2"
+      "version": "1.26.0"
+    }
   },
-  "3.3-rc": {
+  "3.3": {
+    "version": "3.3.6",
+    "date": "2024-11-05",
+    "post": "/en/news/2024/11/05/ruby-3-3-6-released/",
+    "url": {
+      "gz": "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.6.tar.gz",
+      "zip": "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.6.zip",
+      "xz": "https://cache.ruby-lang.org/pub/ruby/3.3/ruby-3.3.6.tar.xz"
+    },
+    "size": {
+      "gz": 22153657,
+      "zip": 27048656,
+      "xz": 16398228
+    },
+    "sha1": {
+      "gz": "0106171cd1801fb5663e8e709f3d6c935d683c9b",
+      "zip": "88239456249cd80cadd1cbf98a317ae700ccd9df",
+      "xz": "25391e9bd8547cd07e09afcfc472777520a3178a"
+    },
+    "sha256": {
+      "gz": "8dc48fffaf270f86f1019053f28e51e4da4cce32a36760a0603a9aee67d7fd8d",
+      "zip": "a60240a6f9bcc8db6c07d40ad29c7dceb21430debe3ebc39bf339207818132f6",
+      "xz": "540975969d1af42190d26ff629bc93b1c3f4bffff4ab253e245e125085e66266"
+    },
+    "sha512": {
+      "gz": "4ae22f5c2a1f7ed84aab7587ff04ce4d9933cffe4347deaef0ab88d22c9780f274c1664a4ee1dd8235bc3cc749be828ffa8db7cb5f5002339a59a599acf3c729",
+      "zip": "c010c7d3e2b373b41a18bcadfb6dba276afabe479d75624569b5bdc605f3575bced2aff511708e25ceca43c7c918400222329e55e599c54154f203957f119ad2",
+      "xz": "c4b86188bf539fa737932e1ba5b746bc295e7c43b2f8cca2668eb7c88aa7228e2ce9032bbcd244a7d558a11bc842445b5fbeac3503ca7d223b63c53e08dba4ab"
+    },
+    "variants": [
+      "bookworm",
+      "slim-bookworm",
+      "bullseye",
+      "slim-bullseye",
+      "alpine3.20",
+      "alpine3.19"
+    ],
     "rust": {
-      "version": "1.66.0"
+      "version": "1.74.1"
     },
     "rustup": {
       "arches": {
         "amd64": {
           "glibc": {
             "arch": "x86_64-unknown-linux-gnu",
-            "sha256": "5cc9ffd1026e82e7fb2eec2121ad71f4b0f044e88bca39207b3f6b769aaa799c",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-gnu/rustup-init"
+            "sha256": "0b2f6c8f85a3d02fde2efc0ced4657869d73fccfce59defb4e8d29233116e6db",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/x86_64-unknown-linux-gnu/rustup-init"
           },
           "musl": {
             "arch": "x86_64-unknown-linux-musl",
-            "sha256": "95427cb0592e32ed39c8bd522fe2a40a746ba07afb8149f91e936cddb4d6eeac",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/x86_64-unknown-linux-musl/rustup-init"
+            "sha256": "7aa9e2a380a9958fc1fc426a3323209b2c86181c6816640979580f62ff7d48d4",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/x86_64-unknown-linux-musl/rustup-init"
           }
         },
         "arm64v8": {
           "glibc": {
             "arch": "aarch64-unknown-linux-gnu",
-            "sha256": "e189948e396d47254103a49c987e7fb0e5dd8e34b200aa4481ecc4b8e41fb929",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-gnu/rustup-init"
+            "sha256": "673e336c81c65e6b16dcdede33f4cc9ed0f08bde1dbe7a935f113605292dc800",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/aarch64-unknown-linux-gnu/rustup-init"
           },
           "musl": {
             "arch": "aarch64-unknown-linux-musl",
-            "sha256": "7855404cdc50c20040c743800c947b6f452490d47f8590a4a83bc6f75d1d8eda",
-            "url": "https://static.rust-lang.org/rustup/archive/1.25.1/aarch64-unknown-linux-musl/rustup-init"
+            "sha256": "b1962dfc18e1fd47d01341e6897cace67cddfabf547ef394e8883939bd6e002e",
+            "url": "https://static.rust-lang.org/rustup/archive/1.26.0/aarch64-unknown-linux-musl/rustup-init"
           }
         }
       },
-      "version": "1.25.1"
-    },
-    "sha256": "f79afcf122dc7d04fe26cfa4436b9c488b21766fc54b0d2dfb2ba41cd0cdd355",
-    "variants": [
-      "bookworm",
-      "slim-bookworm",
-      "bullseye",
-      "slim-bullseye",
-      "alpine3.18",
-      "alpine3.17"
-    ],
-    "version": "3.3.0-preview3"
+      "version": "1.26.0"
+    }
   }
 }
