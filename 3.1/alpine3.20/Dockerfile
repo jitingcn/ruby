@@ -15,7 +15,6 @@ RUN set -eux; \
 		yaml-dev \
 		zlib-dev \
 		jemalloc \
-		patchelf \
 	;
 
 # skip installing gem documentation
@@ -120,7 +119,7 @@ RUN set -eux; \
 			| tr ',' '\n' \
 			| sort -u \
 			| awk 'system("[ -e /usr/local/lib/" $1 " ]") == 0 { next } { print "so:" $1 }' \
-			| sed s/"so:libjemalloc.so.1"// \
+			| sed s/"so:libjemalloc.so.2"// \
 	)"; \
 	apk add --no-network --virtual .ruby-rundeps $runDeps; \
 	apk del --no-network .ruby-builddeps; \

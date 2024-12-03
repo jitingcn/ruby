@@ -5,6 +5,13 @@
 #
 FROM buildpack-deps:bullseye
 
+RUN set -eux; \
+	apt-get update; \
+	apt-get install -y --no-install-recommends \
+		libjemalloc2 \
+	; \
+	rm -rf /var/lib/apt/lists/*
+
 # skip installing gem documentation
 RUN set -eux; \
 	mkdir -p /usr/local/etc; \
