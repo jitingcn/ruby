@@ -3,7 +3,7 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.19
+FROM alpine:3.20
 
 RUN set -eux; \
 	apk add --no-cache \
@@ -28,10 +28,10 @@ RUN set -eux; \
 
 ENV LANG C.UTF-8
 
-# https://www.ruby-lang.org/en/news/2024/10/30/ruby-3-2-6-released/
-ENV RUBY_VERSION 3.2.6
-ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.6.tar.xz
-ENV RUBY_DOWNLOAD_SHA256 671134022238c2c4a9d79dc7d1e58c909634197617901d25863642f735a27ecb
+# https://www.ruby-lang.org/en/news/2024/10/07/ruby-3-4-0-preview2-released/
+ENV RUBY_VERSION 3.4.0-preview2
+ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.4/ruby-3.4.0-preview2.tar.xz
+ENV RUBY_DOWNLOAD_SHA256 626bf4fe952323c15ec9a8999f470ec136ef91c0fc34c484646aaaa9a0b62ca7
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
@@ -40,7 +40,6 @@ RUN set -eux; \
 # readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
-		bison \
 		bzip2 \
 		bzip2-dev \
 		ca-certificates \
@@ -61,7 +60,6 @@ RUN set -eux; \
 		openssl-dev \
 		patch \
 		procps \
-		readline-dev \
 		ruby \
 		tar \
 		xz \
@@ -123,10 +121,10 @@ RUN set -eux; \
 	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-	# add ruby 3.2 jemalloc patch
-	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
-	patch -p1 -ti ruby_32_jemalloc.patch; \
-	rm ruby_32_jemalloc.patch; \
+	# add ruby 3.3 jemalloc patch
+	wget -O 'ruby_33_jemalloc.patch' 'https://raw.githubusercontent.com/fullstaq-ruby/server-edition/main/resources/ruby_33_jemalloc.patch'; \
+	patch -p1 -ti ruby_33_jemalloc.patch; \
+	rm ruby_33_jemalloc.patch; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
