@@ -3,40 +3,30 @@
 #
 # PLEASE DO NOT EDIT IT DIRECTLY.
 #
-FROM alpine:3.19
+FROM alpine:3.21
 
 RUN set -eux; \
 	apk add --no-cache \
-		bzip2 \
 		ca-certificates \
-		gmp-dev \
-		libffi-dev \
-		procps \
-		yaml-dev \
-		zlib-dev \
 		jemalloc \
 	;
 
-# skip installing gem documentation
+# skip installing gem documentation with `gem install`/`gem update`
 RUN set -eux; \
 	mkdir -p /usr/local/etc; \
-	{ \
-		echo 'install: --no-document'; \
-		echo 'update: --no-document'; \
-	} >> /usr/local/etc/gemrc
+	echo 'gem: --no-document' >> /usr/local/etc/gemrc
 
 ENV LANG C.UTF-8
 
-# https://www.ruby-lang.org/en/news/2024/05/29/ruby-3-1-6-released/
-ENV RUBY_VERSION 3.1.6
-ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.1/ruby-3.1.6.tar.xz
-ENV RUBY_DOWNLOAD_SHA256 597bd1849f252d8a6863cb5d38014ac54152b508c36dca156f6356a9e63c6102
+# https://www.ruby-lang.org/en/news/2025/03/26/ruby-3-2-8-released/
+ENV RUBY_VERSION 3.2.8
+ENV RUBY_DOWNLOAD_URL https://cache.ruby-lang.org/pub/ruby/3.2/ruby-3.2.8.tar.xz
+ENV RUBY_DOWNLOAD_SHA256 1cccd3100155275293ae5d4ea0a1a1068f5de69e71732220f144acce26327a3c
 
 # some of ruby's build scripts are written in ruby
 #   we purge system ruby later to make sure our final image uses what we just built
 RUN set -eux; \
 	\
-# readline-dev vs libedit-dev: https://bugs.ruby-lang.org/issues/11869 and https://github.com/docker-library/ruby/issues/75
 	apk add --no-cache --virtual .ruby-builddeps \
 		autoconf \
 		bison \
@@ -49,6 +39,7 @@ RUN set -eux; \
 		gcc \
 		gdbm-dev \
 		glib-dev \
+		gmp-dev \
 		libc-dev \
 		libffi-dev \
 		libxml2-dev \
@@ -60,6 +51,8 @@ RUN set -eux; \
 		openssl-dev \
 		patch \
 		procps \
+		yaml-dev \
+		zlib-dev \
 		readline-dev \
 		ruby \
 		tar \
@@ -68,6 +61,28 @@ RUN set -eux; \
 		zlib-dev \
 		patchelf \
 	; \
+	\
+	rustArch=; \
+	apkArch="$(apk --print-arch)"; \
+	case "$apkArch" in \
+		'x86_64') rustArch='x86_64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.27.1/x86_64-unknown-linux-musl/rustup-init'; rustupSha256='1455d1df3825c5f24ba06d9dd1c7052908272a2cae9aa749ea49d67acbe22b47' ;; \
+		'aarch64') rustArch='aarch64-unknown-linux-musl'; rustupUrl='https://static.rust-lang.org/rustup/archive/1.27.1/aarch64-unknown-linux-musl/rustup-init'; rustupSha256='7087ada906cd27a00c8e0323401a46804a03a742bd07811da6dead016617cc64' ;; \
+	esac; \
+	\
+	if [ -n "$rustArch" ]; then \
+		mkdir -p /tmp/rust; \
+		\
+		wget -O /tmp/rust/rustup-init "$rustupUrl"; \
+		echo "$rustupSha256 */tmp/rust/rustup-init" | sha256sum --check --strict; \
+		chmod +x /tmp/rust/rustup-init; \
+		\
+		export RUSTUP_HOME='/tmp/rust/rustup' CARGO_HOME='/tmp/rust/cargo'; \
+		export PATH="$CARGO_HOME/bin:$PATH"; \
+		/tmp/rust/rustup-init -y --no-modify-path --profile minimal --default-toolchain '1.84.0' --default-host "$rustArch"; \
+		\
+		rustc --version; \
+		cargo --version; \
+	fi; \
 	\
 	wget -O ruby.tar.xz "$RUBY_DOWNLOAD_URL"; \
 	echo "$RUBY_DOWNLOAD_SHA256 *ruby.tar.xz" | sha256sum --check --strict; \
@@ -86,34 +101,24 @@ RUN set -eux; \
 	patch -p1 -i thread-stack-fix.patch; \
 	rm thread-stack-fix.patch; \
 	\
-# the configure script does not detect isnan/isinf as macros
-	export ac_cv_func_isnan=yes ac_cv_func_isinf=yes; \
-	\
-# hack in "ENABLE_PATH_CHECK" disabling to suppress:
-#   warning: Insecure world writable dir
-	{ \
-		echo '#define ENABLE_PATH_CHECK 0'; \
-		echo; \
-		cat file.c; \
-	} > file.c.new; \
-	mv file.c.new file.c; \
-	\
 	autoconf; \
 	gnuArch="$(dpkg-architecture --query DEB_BUILD_GNU_TYPE)"; \
-	# add ruby 3.1 jemalloc patch
-	wget -O 'ruby_31_jemalloc.patch' 'https://raw.githubusercontent.com/fullstaq-ruby/server-edition/main/resources/ruby_31_jemalloc.patch'; \
-	patch -p1 -ti ruby_31_jemalloc.patch; \
-	rm ruby_31_jemalloc.patch; \
+	# add ruby 3.2 jemalloc patch
+	wget -O 'ruby_32_jemalloc.patch' 'https://gist.githubusercontent.com/jitingcn/4a518dbd1d0112bdb5789a65e6456033/raw/1e378904e1f3766f4faa1c5cb87e045a9bd1f6f2/ruby_32_jemalloc.patch'; \
+	patch -p1 -ti ruby_32_jemalloc.patch; \
+	rm ruby_32_jemalloc.patch; \
 	./configure \
 		--build="$gnuArch" \
 		--disable-install-doc \
 		--enable-shared \
+		${rustArch:+--enable-yjit} \
 	; \
 	make -j "$(nproc)"; \
 	make install; \
 	patchelf --add-needed libjemalloc.so.2 /usr/local/bin/ruby; \
 	strip --strip-all /usr/local/bin/ruby; \
 	\
+	rm -rf /tmp/rust; \
 	runDeps="$( \
 		scanelf --needed --nobanner --format '%n#p' --recursive /usr/local \
 			| tr ',' '\n' \
@@ -129,7 +134,7 @@ RUN set -eux; \
 # verify we have no "ruby" packages installed
 	if \
 		apk --no-network list --installed \
-			| grep -v '^[.]ruby-rundeps' \
+			| grep -v '^[.]ruby-' \
 			| grep -i ruby \
 	; then \
 		exit 1; \
